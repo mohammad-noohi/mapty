@@ -78,7 +78,7 @@ class App {
   // Private class fields
   #map;
   #mapEvent;
-  #workouts = [];
+  #workouts = JSON.parse(localStorage.getItem('db')) ?? [];
 
   // All codes in constructor immediatly execute when the instance create so we put our Top-Level codes in there
   constructor() {
@@ -114,6 +114,10 @@ class App {
 
     // User click on map
     this.#map.on('click', this._showForm.bind(this));
+
+    // If there is no databse just set to empty array
+    this.#workouts.forEach(wk => this._renderWorkout(wk));
+    this.#workouts.forEach(wk => this.renderWorkoutMarker(wk));
   }
 
   _showForm(mapE) {
@@ -155,6 +159,8 @@ class App {
 
       workout = new Running([lat, lng], distance, duration, cadence);
       this.#workouts.push(workout);
+
+      localStorage.setItem('db', JSON.stringify(this.#workouts));
     }
     // 4. If activity be cycling , create cycling object
     if (type === 'cycling') {
@@ -166,6 +172,7 @@ class App {
 
       workout = new Cycling([lat, lng], distance, duration, elevation);
       this.#workouts.push(workout);
+      localStorage.setItem('db', JSON.stringify(this.#workouts));
     }
 
     // 6. Render workout on a map as a marker
@@ -176,9 +183,12 @@ class App {
 
     // 8. Hide form and clear inputs
     this._hideForm();
+
+    console.log(JSON.parse(localStorage.getItem('db')));
   }
 
   renderWorkoutMarker(workout) {
+    console.log(this);
     L.marker(workout.coords)
       .addTo(this.#map)
       .bindPopup(
