@@ -78,14 +78,14 @@ class App {
   // Private class fields
   #map;
   #mapEvent;
-  #workouts = JSON.parse(localStorage.getItem('db')) ?? [];
+  #workouts = [];
 
   // All codes in constructor immediatly execute when the instance create so we put our Top-Level codes in there
   constructor() {
     this._getPosition();
+
     form.addEventListener('submit', this._newWorkout.bind(this));
     inputType.addEventListener('change', this._toggleElevationField);
-
     containerWorkouts.addEventListener('click', this._moveTopPopup.bind(this));
   }
 
@@ -115,9 +115,8 @@ class App {
     // User click on map
     this.#map.on('click', this._showForm.bind(this));
 
-    // If there is no databse just set to empty array
-    this.#workouts.forEach(wk => this._renderWorkout(wk));
-    this.#workouts.forEach(wk => this.renderWorkoutMarker(wk));
+    // Display all latest workouts from localstorage
+    this._getLocalstorage();
   }
 
   _showForm(mapE) {
@@ -176,7 +175,7 @@ class App {
     }
 
     // 6. Render workout on a map as a marker
-    this.renderWorkoutMarker(workout);
+    this._renderWorkoutMarker(workout);
 
     // 7. Render workout on list
     this._renderWorkout(workout);
@@ -184,11 +183,13 @@ class App {
     // 8. Hide form and clear inputs
     this._hideForm();
 
+    // 9 . Set to localstorage
+    this._setToLocalstorage();
+
     console.log(JSON.parse(localStorage.getItem('db')));
   }
 
-  renderWorkoutMarker(workout) {
-    console.log(this);
+  _renderWorkoutMarker(workout) {
     L.marker(workout.coords)
       .addTo(this.#map)
       .bindPopup(
@@ -288,6 +289,31 @@ class App {
 
     // Go to position
     this.#map.flyTo(workoutCoords, 13);
+  }
+
+  _setToLocalstorage() {
+    localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+  }
+
+  _getLocalstorage() {
+    const data = JSON.parse(localStorage.getItem('workouts'));
+
+    // Gaurd Clause
+    if (!data) return;
+
+    // If we have data run this code
+    this.#workouts = data;
+
+    this.#workouts.forEach(workout => {
+      this._renderWorkout(workout);
+      this._renderWorkoutMarker(workout);
+    });
+  }
+
+  // Public Method ( Other methods are private method )
+  reset() {
+    localStorage.removeItem('workouts');
+    location.reload();
   }
 }
 
